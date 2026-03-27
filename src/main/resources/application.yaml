@@ -1,0 +1,16 @@
+ktor:
+  application:
+    modules:
+      - net.sfls.lh.intellilearn.ApplicationKt.module
+  deployment:
+    port: 8080
+postgres:
+  url: "jdbc:postgresql://localhost:5432/intellilearn"
+  user: postgres
+  password: ${POSTGRES_PASSWORD}
+upload:
+  dir: "uploaded"
+  tempDir: "uploaded/temp"
+security:
+  registration: true
+  cookieMaxAge: 86400
