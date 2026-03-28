@@ -1,6 +1,5 @@
 package net.sfls.lh.intellilearn.docprocessing
 
-// TaskProcessor.kt
 import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import net.sfls.lh.intellilearn.orm.*
@@ -39,8 +38,15 @@ class TaskProcessor(
             val result = when (task.taskType) {
                 TaskType.ANALYZE_PAPER -> {
                     val payload = Json.decodeFromString<AnalyzePaperPayload>(task.payload)
-                    val questions = getQuestionsForExam(payload.examId)
-                    Analyzer.analyzePaper(payload.examId, questions)
+                    val questions = getQuestionsForExam(payload.examId) // 返回题目文本列表
+                    val ids = mutableListOf<UInt>()
+                    questions.forEach { questionText ->
+                        queueService.enqueue(
+                            TaskType.ANALYZE_SINGLE,
+                            Json.encodeToString(AnalyzeSinglePayload(questionText))
+                        ).let { ids.addLast(it.value) }
+                    }
+                    ids.joinToString(separator = ",")
                 }
 
                 TaskType.ANALYZE_GROUP -> {
@@ -51,19 +57,22 @@ class TaskProcessor(
 
                 TaskType.ANALYZE_STUDENT -> {
                     val payload = Json.decodeFromString<AnalyzeStudentPayload>(task.payload)
-                    val studentData = collectStudentData(payload.examId, payload.studentId)
-                    Analyzer.analyzeStudent(studentData)
+                    Analyzer.analyzeStudent(payload.examId, payload.student)
+                }
+
+                TaskType.ANALYZE_SINGLE -> {
+                    val payload = Json.decodeFromString<AnalyzeSinglePayload>(task.payload)
+                    Analyzer.analyzeSingleProblem(payload.content)
                 }
             }
-            storeResult(task, result)
             queueService.markSuccess(task.id, result)
         } catch (e: Exception) {
             queueService.markFailed(task.id, e.message ?: "Unknown error")
         }
     }
 
-    private suspend fun getQuestionsForExam(examId: UInt): List<String> = TODO()
+    private suspend fun getQuestionsForExam(examId: UInt) =
+        Analyzer.separateProblems(examId).split("---")
+
     private suspend fun collectGroupData(examId: UInt, groupId: UInt): String = TODO()
-    private suspend fun collectStudentData(examId: UInt, studentId: UInt): String = TODO()
-    private suspend fun storeResult(task: Task, result: String): Unit = TODO()
 }

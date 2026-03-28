@@ -8,8 +8,10 @@ import net.sfls.lh.intellilearn.routes.examRoutes
 import net.sfls.lh.intellilearn.routes.registerRoute
 import net.sfls.lh.intellilearn.routes.uploadRoutes
 
+lateinit var uploadService: UploadService
+
 fun Application.configureRouting() {
-    val uploadService = UploadService(
+    uploadService = UploadService(
         uploadDir = environment.config.propertyOrNull("upload.dir")?.getString() ?: "./uploads",
         tempDir = environment.config.propertyOrNull("upload.tempDir")?.getString() ?: "./uploads/temp",
         publicBaseUrl = environment.config.propertyOrNull("upload.publicBaseUrl")?.getString()

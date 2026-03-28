@@ -18,7 +18,8 @@ import kotlin.time.Clock
 enum class TaskType {
     ANALYZE_PAPER,
     ANALYZE_GROUP,
-    ANALYZE_STUDENT
+    ANALYZE_STUDENT,
+    ANALYZE_SINGLE,
 }
 
 enum class TaskStatus {
@@ -32,7 +33,7 @@ enum class TaskStatus {
 data class Task(
     val id: UInt,
     val taskType: TaskType,
-    val payload: String, // JSON 字符串
+    val payload: String,
     val status: TaskStatus,
     val attempts: Int,
     val result: String?,
@@ -46,8 +47,10 @@ data class AnalyzePaperPayload(val examId: UInt)
 data class AnalyzeGroupPayload(val examId: UInt, val groupId: UInt)
 
 @Serializable
-data class AnalyzeStudentPayload(val examId: UInt, val studentId: UInt)
+data class AnalyzeStudentPayload(val examId: UInt, val student: String)
 
+@Serializable
+data class AnalyzeSinglePayload(val content: String)
 
 object TaskTable : UIntIdTable("ollama_tasks") {
     val taskType = enumeration<TaskType>("task_type")
