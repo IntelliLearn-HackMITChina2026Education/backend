@@ -14,3 +14,6 @@ upload:
 security:
   registration: true
   cookieMaxAge: 86400
+task:
+  concurrency: 1
+  pollInterval: 1000

@@ -3,8 +3,10 @@ package net.sfls.lh.intellilearn
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.ktor.server.application.*
+import net.sfls.lh.intellilearn.orm.TaskQueueService
 import org.jetbrains.exposed.v1.jdbc.Database
 
+lateinit var queueService: TaskQueueService
 
 fun Application.configureDatabases() {
     fun getDataSource(key: String) = environment.config.property("postgres.$key").getString()
@@ -19,6 +21,7 @@ fun Application.configureDatabases() {
             validate()
         }
     )
-    Database.connect(hikari)
+    val database = Database.connect(hikari)
+    queueService = TaskQueueService(database)
     log.info("Database is successfully connected.")
 }

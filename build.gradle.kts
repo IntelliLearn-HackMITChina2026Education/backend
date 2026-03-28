@@ -1,8 +1,7 @@
-val exposed_version: String by project
-val h2_version: String by project
-val kotlin_version: String by project
-val logback_version: String by project
-val postgres_version: String by project
+val exposedVersion: String by project
+val kotlinVersion: String by project
+val logbackVersion: String by project
+val postgresVersion: String by project
 
 plugins {
     kotlin("jvm") version "2.3.0"
@@ -46,12 +45,13 @@ dependencies {
     implementation("com.ucasoft.ktor:ktor-simple-redis-cache:0.57.7")
     implementation("dev.hayden:khealth:3.0.2")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-    implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-migration-core:$exposed_version")
-    implementation("org.jetbrains.exposed:exposed-migration-jdbc:$exposed_version")
-    implementation("org.postgresql:postgresql:$postgres_version")
-    implementation("ch.qos.logback:logback-classic:$logback_version")
+    implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-migration-core:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-migration-jdbc:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
+    implementation("org.postgresql:postgresql:$postgresVersion")
+    implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.ktor:ktor-server-config-yaml")
     implementation("com.zaxxer:HikariCP:7.0.2")
     implementation("com.github.BlophyNova:kollama:436e6ebc30")
@@ -60,5 +60,5 @@ dependencies {
     implementation("org.apache.poi:poi-ooxml:5.5.1")
     implementation("io.github.crackthecodeabhi:kreds:0.9.1")
     testImplementation("io.ktor:ktor-server-test-host")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
+    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
 }
