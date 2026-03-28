@@ -11,6 +11,7 @@ fun Application.configureTaskProcessor() {
     val concurrency = environment.config.property("task.concurrency").getAs<Int>().or(2)
     val pollInterval = environment.config.property("task.pollInterval").getAs<Long>().or(1000)
     val taskProcessor = TaskProcessor(queueService, concurrency, pollInterval)
+
     val started = AtomicBoolean(false)
     if (started.compareAndSet(expectedValue = false, newValue = true)) {
         taskProcessor.start()

@@ -2,12 +2,15 @@ package net.sfls.lh.intellilearn.docprocessing
 
 import kotlinx.serialization.json.Json
 import net.blophy.nova.kollama.KOllamaClient
-import net.sfls.lh.intellilearn.orm.ExamTable
-import net.sfls.lh.intellilearn.orm.TaskTable
+import net.sfls.lh.intellilearn.modelName
+import net.sfls.lh.intellilearn.orm.*
 import net.sfls.lh.intellilearn.uploadService
 import net.sfls.lh.intellilearn.utils.convertToMarkdown
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.jdbc.andWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
@@ -18,7 +21,7 @@ object Analyzer {
 
     suspend fun separateProblems(examId: UInt): String {
         val fileId = transaction {
-            return@transaction ExamTable
+            ExamTable
                 .selectAll()
                 .where { ExamTable.id eq examId }
                 .first()[ExamTable.paper]
@@ -30,7 +33,7 @@ object Analyzer {
             下为试卷内容：
             $fileContent
         """.trimIndent()
-        return ollama.generate("qwen3.5", prompt).response
+        return ollama.generate(modelName, prompt).response
     }
 
     suspend fun analyzeSingleProblem(content: String): String {
@@ -39,21 +42,109 @@ object Analyzer {
             下为题目内容：
             $content
         """.trimIndent()
-        return ollama.generate("qwen3.5", prompt).response
+        return ollama.generate(modelName, prompt).response
     }
 
-    suspend fun analyzeGroup(groupData: String): String {
+    suspend fun analyzeGroup(examId: UInt, groupId: UInt): String {
+        val groupData = transaction {
+            GroupsTable
+                .selectAll()
+                .where { GroupsTable.id eq groupId }
+                .first()[GroupsTable.members]
+                .map {
+                    UsersTable
+                        .select(UsersTable.id, UsersTable.name)
+                        .where { UsersTable.id eq it }
+                        .first()[UsersTable.name]
+                }
+        }.let {
+            transaction {
+                AnalyzedTable
+                    .selectAll()
+                    .where { AnalyzedTable.exam eq examId }
+                    .andWhere { AnalyzedTable.student inList it }
+                    .map { row ->
+                        row[AnalyzedTable.content]
+                    }
+            }
+        }
         val prompt = """
             分析以下小组的学习数据，给出整体学习情况评价和针对性学习建议。
             数据：$groupData
-            返回 JSON 格式：{"summary": "...", "suggestions": ["建议1","建议2"]}
+            返回 JSON 格式示例如下：
+            {
+              "id": 1,
+              "name": "高三（1）班数学分析",
+              "studentCount": 35,
+              "avgScore": 78.5,
+              "scoreChange": 5.2,
+              "weakKnowledgePoints": [
+                {
+                  "name": "函数与导数",
+                  "mastery": 0.62,
+                  "weakCount": 18
+                },
+                {
+                  "name": "立体几何",
+                  "mastery": 0.71,
+                  "weakCount": 12
+                },
+                {
+                  "name": "数列",
+                  "mastery": 0.68,
+                  "weakCount": 15
+                }
+              ],
+              "strengths": [
+                "基础计算能力扎实",
+                "三角函数掌握较好",
+                "课堂参与度高"
+              ],
+              "suggestions": [
+                "针对函数与导数进行专项强化训练",
+                "组织小组互助学习，重点帮扶薄弱知识点",
+                "增加综合题型练习，提升知识迁移能力"
+              ],
+              "members": [
+                {
+                  "id": 101,
+                  "name": "张三",
+                  "score": 92,
+                  "trend": "up"
+                },
+                {
+                  "id": 102,
+                  "name": "李四",
+                  "score": 74,
+                  "trend": "stable"
+                },
+                {
+                  "id": 103,
+                  "name": "王五",
+                  "score": 65,
+                  "trend": "down"
+                },
+                {
+                  "id": 104,
+                  "name": "赵六",
+                  "score": 88,
+                  "trend": "up"
+                },
+                {
+                  "id": 105,
+                  "name": "周七",
+                  "score": 70,
+                  "trend": "stable"
+                }
+              ]
+            }
         """.trimIndent()
-        return ollama.generate("qwen3.5", prompt).response
+        return ollama.generate(modelName, prompt).response
     }
 
     suspend fun analyzeStudent(examId: UInt, student: String): String {
         val fileId = transaction {
-            return@transaction ExamTable
+            ExamTable
                 .selectAll()
                 .where { ExamTable.id eq examId }
                 .first()[ExamTable.grade]
@@ -87,8 +178,16 @@ object Analyzer {
             $studentDataString
             试卷分析：
             $problemDataString
-            返回 JSON 格式：{"trendAnalysis": "...", "knowledgeWeakness": ["知识点1","知识点2"], "suggestions": ["建议1","建议2"]}
+            返回 JSON 格式示例如下：{"trendAnalysis": "...", "knowledgeWeakness": ["知识点1","知识点2"], "suggestions": ["建议1","建议2"]}
         """.trimIndent()
-        return ollama.generate("qwen3.5", prompt).response
+        val ret = ollama.generate(modelName, prompt).response
+        transaction {
+            AnalyzedTable.insert {
+                it[AnalyzedTable.type] = AnalyzedTypes.STUDENT
+                it[AnalyzedTable.exam] = examId
+                it[AnalyzedTable.student] = student
+            }
+        }
+        return ret
     }
 }

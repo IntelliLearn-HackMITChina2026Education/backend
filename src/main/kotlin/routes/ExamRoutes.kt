@@ -44,8 +44,11 @@ fun Route.examRoutes() {
                     it[paper] = new.examPaper
                     it[grade] = new.gradeSheet
                 }
-            }
-            call.respond(HttpStatusCode.Created, id.value)
+            }.value
+            //val payload = AnalyzePaperPayload(id)
+            //val taskId = queueService.enqueue(TaskType.ANALYZE_PAPER, Json.encodeToString(payload)).value
+            //call.respond(HttpStatusCode.Created, listOf(id, taskId))
+            call.respond(HttpStatusCode.Created, id)
         }
     }
 }

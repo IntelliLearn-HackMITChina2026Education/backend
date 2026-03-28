@@ -38,7 +38,7 @@ class TaskProcessor(
             val result = when (task.taskType) {
                 TaskType.ANALYZE_PAPER -> {
                     val payload = Json.decodeFromString<AnalyzePaperPayload>(task.payload)
-                    val questions = getQuestionsForExam(payload.examId) // 返回题目文本列表
+                    val questions = Analyzer.separateProblems(payload.examId).split("---")
                     val ids = mutableListOf<UInt>()
                     questions.forEach { questionText ->
                         queueService.enqueue(
@@ -51,8 +51,7 @@ class TaskProcessor(
 
                 TaskType.ANALYZE_GROUP -> {
                     val payload = Json.decodeFromString<AnalyzeGroupPayload>(task.payload)
-                    val groupData = collectGroupData(payload.examId, payload.groupId)
-                    Analyzer.analyzeGroup(groupData)
+                    Analyzer.analyzeGroup(payload.examId, payload.groupId)
                 }
 
                 TaskType.ANALYZE_STUDENT -> {
@@ -70,9 +69,4 @@ class TaskProcessor(
             queueService.markFailed(task.id, e.message ?: "Unknown error")
         }
     }
-
-    private suspend fun getQuestionsForExam(examId: UInt) =
-        Analyzer.separateProblems(examId).split("---")
-
-    private suspend fun collectGroupData(examId: UInt, groupId: UInt): String = TODO()
 }

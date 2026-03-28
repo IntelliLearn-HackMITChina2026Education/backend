@@ -67,14 +67,14 @@ object TaskTable : UIntIdTable("ollama_tasks") {
 
 class TaskQueueService(private val database: Database) {
 
-    suspend fun enqueue(taskType: TaskType, payload: String) = transaction(database) {
+    fun enqueue(taskType: TaskType, payload: String) = transaction(database) {
         TaskTable.insertAndGetId {
             it[TaskTable.taskType] = taskType
             it[TaskTable.payload] = payload
         }
     }
 
-    suspend fun dequeue(): Task? = transaction(database) {
+    fun dequeue(): Task? = transaction(database) {
         val row = TaskTable
             .selectAll()
             .where { TaskTable.status eq TaskStatus.PENDING }
@@ -102,7 +102,7 @@ class TaskQueueService(private val database: Database) {
         }
     }
 
-    suspend fun markSuccess(taskId: UInt, result: String) = transaction(database) {
+    fun markSuccess(taskId: UInt, result: String) = transaction(database) {
         TaskTable.update({ TaskTable.id eq taskId }) {
             it[status] = TaskStatus.SUCCESS
             it[finishedAt] = Clock.System.now()
@@ -111,7 +111,7 @@ class TaskQueueService(private val database: Database) {
         }
     }
 
-    suspend fun markFailed(taskId: UInt, errorMsg: String, maxAttempts: Int = 3) = transaction(database) {
+    fun markFailed(taskId: UInt, errorMsg: String, maxAttempts: Int = 3) = transaction(database) {
         val task = TaskTable.selectAll().where { TaskTable.id eq taskId }.single()
         val attempts = task[TaskTable.attempts]
 

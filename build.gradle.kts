@@ -50,6 +50,7 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-migration-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-migration-jdbc:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-kotlin-datetime:$exposedVersion")
+    implementation("org.jetbrains.exposed:exposed-json:${exposedVersion}")
     implementation("org.postgresql:postgresql:$postgresVersion")
     implementation("ch.qos.logback:logback-classic:$logbackVersion")
     implementation("io.ktor:ktor-server-config-yaml")

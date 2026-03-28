@@ -15,5 +15,6 @@ security:
   registration: true
   cookieMaxAge: 86400
 task:
+  model: "qwen3.5:9b"
   concurrency: 1
   pollInterval: 1000
