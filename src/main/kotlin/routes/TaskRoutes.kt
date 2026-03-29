@@ -3,6 +3,7 @@ package net.sfls.lh.intellilearn.routes
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import net.sfls.lh.intellilearn.orm.*
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -40,7 +41,7 @@ fun Route.processingRoutes() {
 
                 tasks.mapNotNull { task ->
                     val payload =
-                        kotlinx.serialization.json.Json.decodeFromString<AnalyzePaperPayload>(task[TaskTable.payload])
+                        Json.decodeFromString<AnalyzePaperPayload>(task[TaskTable.payload])
                     val exam = ExamTable
                         .selectAll()
                         .where { ExamTable.id eq payload.examId }
@@ -112,8 +113,7 @@ fun Route.processingRoutes() {
 
                 // 添加每个子任务（单题分析）
                 childTasks.forEachIndexed { index, task ->
-                    val payload =
-                        kotlinx.serialization.json.Json.decodeFromString<AnalyzeSinglePayload>(task[TaskTable.payload])
+                    val payload = Json.decodeFromString<AnalyzeSinglePayload>(task[TaskTable.payload])
                     result.add(
                         ExamTaskResponse(
                             name = "第 ${index + 1} 题分析",
